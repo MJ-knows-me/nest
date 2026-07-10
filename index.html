@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Nest 🦉</title>
+<!-- iOS home-screen app behavior -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nest">
+<meta name="theme-color" content="#f6efe2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191731" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;600;700&family=Varela+Round&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6efe2;
+  --bg2:#f0e6d2;
+  --card:#fffdf6;
+  --card-edge:#eadfc8;
+  --ink:#33291d;
+  --ink-soft:#7a6c58;
+  --ink-faint:#a5978147;
+  --accent:#c4602d;
+  --accent-soft:#c4602d1a;
+  --amber:#d99a2b;
+  --sage:#7d9070;
+  --sage-deep:#5d7352;
+  --rust:#a8431f;
+  --owl-body:#c79a5f;
+  --owl-belly:#f6e7c8;
+  --owl-wing:#b58a52;
+  --owl-beak:#e8933f;
+  --owl-blush:#f0977c;
+  --owl-scallop:#e0c9a0;
+  --owl-eye:#3a2b1c;
+  --bubble:#fffdf6;
+  --shadow:0 2px 10px rgba(90,70,40,.08), 0 10px 30px rgba(90,70,40,.07);
+  --sky1:#fbe8c8; --sky2:#f6efe2;
+  --chip:#fffdf680;
+  --btn-ink:#fffdf6;
+  --seg:#e8dcc4;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#191731;
+    --bg2:#141228;
+    --card:#232041;
+    --card-edge:#312c55;
+    --ink:#f0e8d6;
+    --ink-soft:#a89ec4;
+    --ink-faint:#a89ec440;
+    --accent:#e8a13c;
+    --accent-soft:#e8a13c22;
+    --amber:#e8a13c;
+    --sage:#8fa583;
+    --sage-deep:#a4bd96;
+    --rust:#e07a52;
+    --owl-body:#b1854e;
+    --owl-belly:#e9d6ae;
+    --owl-wing:#9c7444;
+    --owl-beak:#e8933f;
+    --owl-blush:#e98a70;
+    --owl-scallop:#cdb488;
+    --owl-eye:#33261a;
+    --bubble:#2a2650;
+    --shadow:0 2px 10px rgba(0,0,0,.25), 0 10px 30px rgba(0,0,0,.2);
+    --sky1:#241f4d; --sky2:#191731;
+    --chip:#232041cc;
+    --btn-ink:#191731;
+    --seg:#312c55;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html{height:100%}
+body{
+  font-family:'Varela Round',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100%;
+  overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));
+}
+.serif{font-family:'Comfortaa',sans-serif}
+
+/* ---------- header / sky ---------- */
+header{
+  background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 100%);
+  padding:calc(14px + env(safe-area-inset-top)) 18px 6px;
+  position:relative;
+  overflow:hidden;
+}
+.stars{position:absolute;inset:0;pointer-events:none;opacity:0}
+@media (prefers-color-scheme: dark){ .stars{opacity:1} }
+.stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#f0e8d6;opacity:.7;animation:twinkle 3s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.85}}
+.masthead{display:flex;align-items:baseline;justify-content:space-between}
+h1{font-family:'Comfortaa',sans-serif;font-weight:700;font-size:28px;letter-spacing:-.5px}
+h1 .dot{color:var(--accent)}
+.dateline{font-size:12.5px;font-weight:700;color:var(--ink-soft);letter-spacing:.4px;text-transform:uppercase}
+
+.owl-row{display:flex;align-items:flex-end;gap:10px;margin-top:6px;position:relative;z-index:1}
+#owlSvg{width:108px;height:auto;flex:none;filter:drop-shadow(0 6px 8px rgba(60,40,10,.18))}
+.bubble{
+  background:var(--bubble);
+  border:1.5px solid var(--card-edge);
+  border-radius:18px 18px 18px 4px;
+  padding:11px 14px;
+  font-size:14.5px;
+  line-height:1.45;
+  font-weight:600;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
+  animation:bubbleIn .45s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(6px) scale(.96)}to{opacity:1;transform:none}}
+.bubble b{color:var(--accent)}
+
+.statbar{
+  display:flex;gap:8px;margin:10px 0 2px;position:relative;z-index:1;
+}
+.stat{
+  flex:1;background:var(--chip);backdrop-filter:blur(6px);
+  border:1.5px solid var(--card-edge);border-radius:14px;
+  padding:7px 4px 6px;text-align:center;
+}
+.stat .n{font-family:'Comfortaa',sans-serif;font-size:19px;font-weight:700;line-height:1.1}
+.stat .l{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft)}
+.lowenergy{
+  width:100%;margin-top:9px;position:relative;z-index:1;
+  background:transparent;border:1.5px dashed var(--ink-faint);color:var(--ink-soft);
+  border-radius:14px;padding:8px;font:700 12.5px 'Varela Round',sans-serif;
+}
+.lowenergy:active{background:var(--accent-soft)}
+
+/* ---------- chips ---------- */
+.chips{
+  display:flex;gap:7px;overflow-x:auto;padding:12px 18px 4px;
+  scrollbar-width:none;position:sticky;top:0;z-index:20;
+  background:linear-gradient(180deg,var(--bg) 75%,transparent);
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;border:1.5px solid var(--card-edge);background:var(--card);
+  color:var(--ink-soft);border-radius:999px;padding:7px 14px;
+  font:800 12.5px 'Varela Round',sans-serif;
+}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* ---------- list ---------- */
+main{padding:6px 16px 0}
+.groupTitle{
+  font-family:'Comfortaa',sans-serif;font-size:16.5px;font-weight:700;
+  margin:16px 4px 8px;display:flex;align-items:center;gap:8px;
+}
+.groupTitle small{font-family:'Varela Round';font-size:11px;font-weight:800;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase;margin-top:3px}
+.card{
+  background:var(--card);border:1.5px solid var(--card-edge);
+  border-radius:18px;padding:12px 12px 12px 14px;margin-bottom:9px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:var(--shadow);
+  animation:cardIn .3s ease both;
+  position:relative;overflow:hidden;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card .edge{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:0 4px 4px 0}
+.emoji{
+  flex:none;width:44px;height:44px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  background:var(--accent-soft);
+}
+.cbody{flex:1;min-width:0}
+.cname{font-weight:800;font-size:15px;line-height:1.25;display:flex;align-items:center;gap:6px}
+.owlbadge{font-size:11px;flex:none;background:var(--accent-soft);border-radius:999px;padding:1.5px 7px;font-weight:800;color:var(--accent)}
+.csug{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-top:2px;line-height:1.35}
+.cbar{height:4px;border-radius:4px;background:var(--ink-faint);margin-top:7px;overflow:hidden;max-width:180px}
+.cbar i{display:block;height:100%;border-radius:4px;transition:width .4s ease}
+.daybtn{
+  flex:none;width:56px;height:56px;border-radius:50%;
+  border:2.5px solid;background:var(--card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Comfortaa',sans-serif;
+  transition:transform .12s ease;
+  color:var(--ink);
+}
+.daybtn:active{transform:scale(.9)}
+.daybtn .dn{font-size:17px;font-weight:700;line-height:1}
+.daybtn .dl{font-size:8.5px;font-weight:800;letter-spacing:.5px;font-family:'Varela Round';color:var(--ink-soft);text-transform:uppercase;margin-top:2px}
+.card.done{opacity:.62}
+.card.done .cname{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:var(--sage)}
+.card.done .daybtn{background:var(--sage);border-color:var(--sage);color:#fff}
+.card.done .daybtn .dl{color:#ffffffcc}
+.empty{
+  text-align:center;color:var(--ink-soft);font-weight:600;font-size:13.5px;
+  padding:26px 20px;line-height:1.5;
+}
+
+/* ---------- export bar ---------- */
+.exportwrap{padding:18px 16px 8px}
+.exportbtn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:9px;
+  background:var(--ink);color:var(--bg);border:none;border-radius:18px;
+  padding:15px;font:800 15px 'Varela Round',sans-serif;box-shadow:var(--shadow);
+}
+.exportbtn:active{transform:scale(.98)}
+.exportbtn small{font-weight:700;opacity:.65}
+
+/* ---------- bottom nav ---------- */
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:65;
+  background:var(--card);border-top:1.5px solid var(--card-edge);
+  display:flex;justify-content:space-around;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+}
+.tab{flex:1;border:none;background:none;color:var(--ink-soft);font:800 10.5px 'Varela Round',sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.3px}
+.tab span.ic{font-size:21px;line-height:1}
+.tab.on{color:var(--accent)}
+
+/* ---------- sheets ---------- */
+.sheetback{
+  position:fixed;inset:0;background:rgba(20,14,6,.45);z-index:60;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.sheetback.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:61;
+  background:var(--bg);border-radius:24px 24px 0 0;
+  max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  transform:translateY(105%);transition:transform .32s cubic-bezier(.3,1,.3,1);
+  padding:10px 18px calc(92px + env(safe-area-inset-bottom));
+  box-shadow:0 -10px 40px rgba(0,0,0,.25);
+}
+.sheet.open{transform:none}
+.grab{width:40px;height:4.5px;border-radius:4px;background:var(--ink-faint);margin:4px auto 14px}
+.sheet h2{font-family:'Comfortaa',sans-serif;font-size:21px;margin-bottom:2px}
+.sheet .sub{color:var(--ink-soft);font-size:13px;font-weight:600;margin-bottom:14px}
+
+/* history */
+.hday{background:var(--card);border:1.5px solid var(--card-edge);border-radius:16px;padding:12px 14px;margin-bottom:9px}
+.hday .hd{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:14px}
+.hday .hd small{color:var(--ink-soft);font-weight:700}
+.hday ul{list-style:none;margin-top:6px}
+.hday li{font-size:13px;font-weight:600;color:var(--ink-soft);padding:2.5px 0;display:flex;gap:7px;align-items:center}
+.hday li b{color:var(--sage-deep)}
+.hday.rest .hd small{color:var(--amber)}
+
+/* manage */
+.mrow{
+  background:var(--card);border:1.5px solid var(--card-edge);border-radius:14px;
+  padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;
+}
+.mrow .mn{flex:1;font-weight:700;font-size:13.5px;min-width:0}
+.mrow .mn small{display:block;color:var(--ink-soft);font-weight:600;font-size:11px}
+.stepper{display:flex;align-items:center;gap:2px;flex:none}
+.stepper button{
+  width:30px;height:30px;border-radius:9px;border:1.5px solid var(--card-edge);
+  background:var(--bg);color:var(--ink);font:800 16px 'Varela Round';
+}
+.stepper .iv{width:44px;text-align:center;font:800 12px 'Varela Round';color:var(--ink)}
+.stepper .iv small{display:block;font-size:9px;color:var(--ink-soft);font-weight:800}
+.mhide{border:none;background:none;font-size:16px;flex:none;opacity:.55;padding:4px}
+.mrow.hidden{opacity:.45}
+.mgmtbtns{display:flex;gap:8px;margin:14px 0 4px}
+.mgmtbtns button, .addbtn{
+  flex:1;border:1.5px solid var(--card-edge);background:var(--card);color:var(--ink);
+  border-radius:14px;padding:11px;font:800 13px 'Varela Round';
+}
+.addform{background:var(--card);border:1.5px solid var(--card-edge);border-radius:16px;padding:12px;margin:8px 0;display:none;flex-direction:column;gap:8px}
+.addform.open{display:flex}
+.addform input{
+  border:1.5px solid var(--card-edge);border-radius:11px;background:var(--bg);
+  padding:10px 12px;font:600 14px 'Varela Round';color:var(--ink);width:100%;
+}
+.addform .row2{display:flex;gap:8px}
+.addform button{border:none;background:var(--accent);color:#fff;border-radius:11px;padding:11px;font:800 14px 'Varela Round'}
+
+/* toast */
+#toast{
+  position:fixed;left:16px;right:16px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:70;
+  background:var(--ink);color:var(--bg);border-radius:16px;padding:13px 16px;
+  font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:10px;
+  transform:translateY(140%);transition:transform .3s cubic-bezier(.3,1.2,.4,1);
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+  pointer-events:none;visibility:hidden;
+}
+#toast.show{transform:none;pointer-events:auto;visibility:visible}
+#toast .msg{flex:1;line-height:1.35}
+#toast button{border:none;background:var(--bg);color:var(--ink);border-radius:9px;padding:7px 13px;font:800 12.5px 'Varela Round'}
+
+/* celebration hearts */
+.heart{position:fixed;z-index:80;pointer-events:none;font-size:18px;animation:floatup 1.1s ease-out forwards}
+@keyframes floatup{
+  0%{opacity:0;transform:translateY(0) scale(.6) rotate(0)}
+  15%{opacity:1}
+  100%{opacity:0;transform:translateY(-90px) scale(1.25) rotate(14deg)}
+}
+
+/* owl animation */
+.owl-blink{animation:blink 5.5s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96.5%{transform:scaleY(.08)}}
+#owlSvg .bob{animation:bob 4s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="stars" id="stars"></div>
+  <div class="masthead">
+    <h1>Nest<span class="dot">.</span></h1>
+    <div class="dateline" id="dateline"></div>
+  </div>
+  <div class="owl-row">
+    <svg id="owlSvg" viewBox="0 0 120 130" aria-label="Owl">
+      <g class="bob">
+        <!-- moon (dark mode only, toggled via JS) -->
+        <g id="moon" style="display:none"><circle cx="106" cy="14" r="9" fill="#f0e8d6" opacity=".9"/><circle cx="102" cy="11" r="8" fill="var(--sky1)"/></g>
+        <!-- fluffball body with ear bumps -->
+        <path d="M22 64 C22 44 28 30 38 24 Q42 18 46 24 C50 20 70 20 74 24 Q78 18 82 24 C92 30 98 44 98 64 C98 94 82 110 60 110 C38 110 22 94 22 64 Z" fill="var(--owl-body)"/>
+        <!-- belly patch -->
+        <path d="M60 66 C75 66 84 78 84 91 C84 104 74 110 60 110 C46 110 36 104 36 91 C36 78 45 66 60 66 Z" fill="var(--owl-belly)"/>
+        <path d="M50 84 q5 6 10 0 M60 84 q5 6 10 0 M55 96 q5 6 10 0" stroke="var(--owl-scallop)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- eyes: giant & sparkly -->
+        <g id="eyes">
+          <g class="owl-blink" style="transform-origin:44px 51px">
+            <circle cx="44" cy="51" r="12.5" fill="#fffdf6"/>
+            <circle id="pupilL" cx="46" cy="53" r="8.5" fill="var(--owl-eye)"/>
+            <circle cx="49" cy="50" r="3" fill="#fff"/>
+            <circle cx="43.5" cy="56" r="1.4" fill="#fff" opacity=".85"/>
+          </g>
+          <g class="owl-blink" style="transform-origin:76px 51px">
+            <circle cx="76" cy="51" r="12.5" fill="#fffdf6"/>
+            <circle id="pupilR" cx="74" cy="53" r="8.5" fill="var(--owl-eye)"/>
+            <circle cx="77" cy="50" r="3" fill="#fff"/>
+            <circle cx="71.5" cy="56" r="1.4" fill="#fff" opacity=".85"/>
+          </g>
+        </g>
+        <!-- sleepy lids -->
+        <g id="sleepyEyes" style="display:none">
+          <path d="M33 51 q11 8 22 0" stroke="var(--owl-eye)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+          <path d="M65 51 q11 8 22 0" stroke="var(--owl-eye)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- happy eyes -->
+        <g id="happyEyes" style="display:none">
+          <path d="M34 53 q10 -11 20 0" stroke="var(--owl-eye)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M66 53 q10 -11 20 0" stroke="var(--owl-eye)" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- beak -->
+        <path d="M60 59 L55.5 64 Q60 69.5 64.5 64 Z" fill="var(--owl-beak)"/>
+        <!-- blush: Fluff is always a little blushy -->
+        <g id="blush" fill="var(--owl-blush)" opacity=".5">
+          <ellipse cx="31" cy="62" rx="5.5" ry="3.4"/><ellipse cx="89" cy="62" rx="5.5" ry="3.4"/>
+        </g>
+        <!-- wing nubs -->
+        <path d="M22 70 Q14 82 24 94 Q28 82 27 70 Z" fill="var(--owl-wing)"/>
+        <path d="M98 70 Q106 82 96 94 Q92 82 93 70 Z" fill="var(--owl-wing)"/>
+        <!-- branch + feet -->
+        <path d="M16 117 Q60 109 104 117" stroke="var(--owl-wing)" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>
+        <ellipse cx="49" cy="110" rx="6.5" ry="3.6" fill="var(--owl-beak)"/>
+        <ellipse cx="71" cy="110" rx="6.5" ry="3.6" fill="var(--owl-beak)"/>
+        <!-- zzz -->
+        <g id="zzz" style="display:none" fill="var(--ink-soft)" font-family="Comfortaa,sans-serif" font-weight="700">
+          <text x="92" y="28" font-size="13">z</text><text x="100" y="18" font-size="10">z</text><text x="106" y="10" font-size="8">z</text>
+        </g>
+        <!-- heart -->
+        <g id="owlHeart" style="display:none">
+          <path d="M100 32 c-2-4-8-3-8 1 c0 3 4 6 8 8 c4-2 8-5 8-8 c0-4-6-5-8-1 Z" fill="var(--rust)" opacity=".85"/>
+        </g>
+      </g>
+    </svg>
+    <div class="bubble" id="owlBubble">…</div>
+  </div>
+  <div class="statbar">
+    <div class="stat"><div class="n" id="stToday">0</div><div class="l">today</div></div>
+    <div class="stat"><div class="n" id="stStreak">0</div><div class="l">day streak</div></div>
+    <div class="stat"><div class="n" id="stWeek">0</div><div class="l">this week</div></div>
+  </div>
+  <button class="lowenergy" id="lowEnergyBtn">🕯️ Low-energy day? Let Owl pick one tiny thing</button>
+</header>
+
+<div class="chips" id="chips"></div>
+
+<main id="list"></main>
+
+<div class="exportwrap">
+  <button class="exportbtn" id="exportBtn">📤 Copy today's log <small>for Telegram</small></button>
+</div>
+
+<nav class="tabs">
+  <button class="tab on" data-view="home"><span class="ic">🪺</span>Nest</button>
+  <button class="tab" data-view="history"><span class="ic">📖</span>Journal</button>
+  <button class="tab" data-view="manage"><span class="ic">🪶</span>Care</button>
+</nav>
+
+<div class="sheetback" id="sheetback"></div>
+
+<div class="sheet" id="historySheet">
+  <div class="grab"></div>
+  <h2 class="serif">The journal 📖</h2>
+  <div class="sub">Your last two weeks of keeping the nest.</div>
+  <div id="historyBody"></div>
+</div>
+
+<div class="sheet" id="manageSheet">
+  <div class="grab"></div>
+  <h2 class="serif">Care & feeding 🪶</h2>
+  <div class="sub">Tune how often Owl suggests each chore, hide ones that don't apply, or add your own.</div>
+  <button class="addbtn" id="addToggle">＋ Add a custom chore</button>
+  <div class="addform" id="addForm">
+    <input id="addName" placeholder="Chore name (e.g. Water the fern)" maxlength="40">
+    <div class="row2">
+      <input id="addEmoji" placeholder="Emoji" maxlength="4" style="width:76px;flex:none">
+      <input id="addDays" placeholder="Every … days" type="number" min="1" max="365" inputmode="numeric">
+    </div>
+    <button id="addSave">Add to the nest</button>
+  </div>
+  <div id="manageBody"></div>
+  <div class="mgmtbtns">
+    <button id="backupBtn">💾 Back up data</button>
+    <button id="restoreBtn">📥 Restore</button>
+  </div>
+  <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
+  <div class="sub" style="margin-top:10px">Everything lives on this phone only. A backup file is your safety net — Owl suggests one every couple of weeks. 💛<br><br><span style="opacity:.7">Days roll over at 4 AM, so post-midnight tidying still counts as tonight.</span></div>
+</div>
+
+<div id="toast"><div class="msg" id="toastMsg"></div><button id="toastBtn">Undo</button></div>
+
+<script>
+/* ================= data ================= */
+const LS_KEY='nest.owl.v1';
+const DAY_CUTOFF_H=4; // logical day starts at 4am — for night owls
+const CHORES=[
+ // daily rhythm
+ {id:'vent',    name:'Air the house', e:'🌬️', cat:'daily', iv:1, tip:'ten minutes of open windows'},
+ {id:'robot',   name:'Robot vacuum & mop run', e:'🤖', cat:'daily', iv:1},
+ {id:'tidy',    name:'10-minute tidy', e:'✨', cat:'daily', iv:1, tip:'things back where they live'},
+ {id:'dishes',  name:'Dish cycle', e:'🍽️', cat:'daily', iv:2, tip:'rinse → dishwasher → unload'},
+ {id:'kitchen', name:'Kitchen reset', e:'🍳', cat:'daily', iv:2, tip:'counters & stovetop'},
+ // flexible
+ {id:'laundry_wash', name:'Laundry — wash & hang', e:'👕', cat:'often', iv:4, owl:1},
+ {id:'laundry_fold', name:'Laundry — fold & put away', e:'🧺', cat:'often', iv:4, owl:1},
+ {id:'foodwaste',    name:'Food waste run', e:'🥬', cat:'often', iv:3, owl:1},
+ {id:'robot_water',  name:'Robot — empty & refill water', e:'💧', cat:'often', iv:3},
+ {id:'recycle',      name:'Recycling & trash out', e:'♻️', cat:'often', fixed:[3,0], iv:4, owl:1}, // Wed & Sun
+ {id:'dust',    name:'Dusting all around', e:'🪶', cat:'weekly', iv:7},
+ {id:'entry',   name:'Entryway & shoes', e:'👟', cat:'weekly', iv:7},
+ {id:'vac_manual', name:'Vacuum the corners', e:'🧹', cat:'weekly', iv:7, tip:'spots the robot can’t reach'},
+ {id:'sheets',  name:'Sheets & pillowcases', e:'🛏️', cat:'weekly', iv:10},
+ {id:'bath_main',   name:'Main bathroom clean', e:'🛁', cat:'weekly', iv:14, owl:1},
+ {id:'bath_second', name:'Second bathroom clean', e:'🚿', cat:'weekly', iv:14, owl:1, tip:'offset it a week from the main one'},
+ // monthly
+ {id:'fridge',  name:'Fridge purge', e:'🧊', cat:'monthly', iv:30},
+ {id:'dw_filter', name:'Dishwasher filter', e:'🫧', cat:'monthly', iv:30},
+ {id:'robot_maint', name:'Robot filter & brushes', e:'🛠️', cat:'monthly', iv:30},
+ {id:'drains',  name:'Bathroom drains', e:'🚰', cat:'monthly', iv:30},
+ {id:'wm_clean', name:'Washing machine self-clean', e:'🌀', cat:'monthly', iv:30},
+ {id:'restock', name:'Restock check', e:'🧻', cat:'monthly', iv:30, tip:'detergent, tissue, sponges…'},
+ {id:'windows', name:'Windows & sills', e:'🪟', cat:'monthly', iv:30},
+ // seasonal
+ {id:'ac_filter', name:'AC / heater filters', e:'❄️', cat:'seasonal', iv:90},
+ {id:'hood',    name:'Range hood degrease', e:'♨️', cat:'seasonal', iv:90},
+ {id:'window_deep', name:'Window tracks & screens', e:'🧽', cat:'seasonal', iv:90},
+ {id:'duvet',   name:'Duvet & blankets wash', e:'☁️', cat:'seasonal', iv:120},
+];
+const CATS=[['all','All'],['daily','Daily'],['often','Often'],['weekly','Weekly'],['monthly','Monthly'],['seasonal','Seasonal'],['owl',"🦉 Owl's beat"]];
+</script>
+<script id="app-logic">
+/* ================= state ================= */
+let S={done:[],custom:[],iv:{},hidden:[],firstRun:true,lastBackupNudge:0};
+try{const raw=localStorage.getItem(LS_KEY); if(raw){S=Object.assign(S,JSON.parse(raw)); S.firstRun=false;}}catch(e){}
+function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(S))}catch(e){}}
+
+/* ================= time helpers ================= */
+const MS_D=86400000;
+function dayNum(t){ // logical day number (4am cutoff), local time
+  const d=new Date(t-DAY_CUTOFF_H*3600000);
+  return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/MS_D);
+}
+function todayNum(){return dayNum(Date.now())}
+function logicalDate(n){ // Date obj (noon) for a logical day number
+  const base=new Date((n*MS_D)+12*3600000+new Date().getTimezoneOffset()*60000);
+  return base;
+}
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDay(n){const d=logicalDate(n);return `${WD[d.getDay()]}, ${MO[d.getMonth()]} ${d.getDate()}`}
+function todayDow(){return logicalDate(todayNum()).getDay()}
+
+/* seeded random per day, so Owl's phrasing is stable within a day */
+function seededPick(arr,salt){let s=todayNum()*7919+salt*104729;s=Math.imul(s^s>>>15,2246822519);s=Math.imul(s^s>>>13,3266489917);return arr[Math.abs(s^s>>>16)%arr.length]}
+
+/* ================= chore model ================= */
+function allChores(){
+  const base=CHORES.map(c=>Object.assign({},c,{iv:S.iv[c.id]||c.iv}));
+  const custom=S.custom.map(c=>Object.assign({cat:'often'},c,{iv:S.iv[c.id]||c.iv}));
+  return base.concat(custom);
+}
+function visChores(){return allChores().filter(c=>!S.hidden.includes(c.id))}
+function lastDoneNum(id){
+  let m=-1;
+  for(const d of S.done) if(d.c===id){const n=dayNum(d.t); if(n>m)m=n;}
+  return m<0?null:m;
+}
+function daysSince(id){const l=lastDoneNum(id);return l===null?null:todayNum()-l}
+function doneToday(id){return lastDoneNum(id)===todayNum()}
+function nextFixedGap(days){ // days until next fixed weekday (0 if today)
+  const t=todayDow();
+  let g=99; for(const d of days){let x=(d-t+7)%7; if(x<g)g=x;}
+  return g;
+}
+function choreState(c){
+  const ds=daysSince(c.id), isDone=doneToday(c.id);
+  let r, sug, never=ds===null;
+  if(c.fixed){
+    const gap=nextFixedGap(c.fixed);
+    if(isDone){r=0;sug='done for today — lovely 💛'}
+    else if(gap===0){r=1.1;sug="today's the day! 🚛"}
+    else if(gap===1){r=.7;sug='tomorrow is pickup day'}
+    else{r=.3;sug=`next: ${WD[c.fixed[nearestFixedIdx(c.fixed)]]}`}
+    if(never&&!isDone&&gap>0)sug='next pickup: '+c.fixed.map(d=>WD[d]).join(' & ');
+  }else{
+    r=never?0.6:ds/c.iv;
+    if(isDone){r=0;sug=seededPick(['done — thank you 💛','all taken care of ✓','fresh as can be ✨'],hash(c.id))}
+    else if(never){sug='not logged yet — whenever you\'re ready 🌱'}
+    else if(r<0.5){const left=Math.max(1,Math.round(c.iv-ds));sug=`all good — think about it in ~${left}d`}
+    else if(r<0.95){sug=seededPick(['in the next day or two would be lovely','soon-ish, when it suits you','a nice pick for your next home day'],hash(c.id))}
+    else if(r<1.3){sug=seededPick(['today would be perfect 🦉','ripe for today, if you have it in you','Owl gently points a wing at this one'],hash(c.id))}
+    else{sug=seededPick(["it's been a while — no guilt, just a good pick 💛",'whenever energy allows — this one misses you','a fine quest for a high-energy day ⚔️'],hash(c.id))}
+  }
+  return {r:isDone?0:r,sug,never,ds,isDone};
+}
+function nearestFixedIdx(days){const t=todayDow();let bi=0,bg=99;days.forEach((d,i)=>{const g=(d-t+7)%7;if(g<bg){bg=g;bi=i}});return bi}
+function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)}
+function statusColor(r,never){
+  if(never)return 'var(--ink-faint)';
+  if(r<0.5)return 'var(--sage)';
+  if(r<0.95)return 'var(--amber)';
+  if(r<1.3)return 'var(--accent)';
+  return 'var(--rust)';
+}
+
+/* ================= stats ================= */
+function countToday(){const t=todayNum();return new Set(S.done.filter(d=>dayNum(d.t)===t).map(d=>d.c)).size}
+function countWeek(){const t=todayNum();return S.done.filter(d=>t-dayNum(d.t)<7).length}
+function streak(){
+  const days=new Set(S.done.map(d=>dayNum(d.t)));
+  let s=0,n=todayNum();
+  if(!days.has(n))n--; // streak may end yesterday without breaking
+  while(days.has(n)){s++;n--}
+  return s;
+}
+
+/* ================= owl brain ================= */
+function overdueCount(){return visChores().filter(c=>{const st=choreState(c);return !st.isDone&&st.r>=0.95}).length}
+function owlFace(mode){
+  const g=id=>document.getElementById(id);
+  g('eyes').style.display=(mode==='sleepy'||mode==='happy')?'none':'';
+  g('sleepyEyes').style.display=mode==='sleepy'?'':'none';
+  g('happyEyes').style.display=mode==='happy'?'':'none';
+  g('blush').setAttribute('opacity',(mode==='happy'||mode==='proud')?'.75':'.5');
+  g('zzz').style.display=mode==='sleepy'?'':'none';
+  g('owlHeart').style.display=mode==='proud'?'':'none';
+  if(mode==='proud'){g('happyEyes').style.display='';g('eyes').style.display='none'}
+}
+function owlSpeak(txt,mode){
+  document.getElementById('owlBubble').innerHTML=txt;
+  owlFace(mode||'normal');
+}
+function defaultOwlLine(){
+  const h=new Date().getHours(), t=countToday(), od=overdueCount(), st=streak();
+  if(S.firstRun) return {m:'normal',t:`Hello, Alex. I'm minding the nest with you while he's away. 🪶 No schedules here — just log things when you do them, and I'll tell you what's ripe.`};
+  if(h>=DAY_CUTOFF_H&&h<5.01&&t===0){} // fallthrough
+  if(h<DAY_CUTOFF_H||h>=23) return {m:'sleepy',t:seededPick([`Fellow night owl 🌙 anything you log now still counts as tonight. Then — rest.`,`The nest is quiet. One tiny thing, or straight to bed — both are wins. 🌙`],1)};
+  if(t>=4) return {m:'proud',t:seededPick([`<b>${t} things today?!</b> The nest has never been safer. I'm beaming. 💛`,`You absolute force of nature. <b>${t} done.</b> Perch and rest now?`],2)};
+  if(t>=1) return {m:'happy',t:seededPick([`<b>${t} done today</b> — every one makes the nest softer. 🪶`,`Look at you go — <b>${t} today</b>. I'm doing a little wing-flap.`,`<b>${t} logged.</b> Owl-approved housekeeping. ✓`],3)};
+  if(od===0) return {m:'happy',t:seededPick([`Everything's resting easy. Enjoy the calm — you built it. ✨`,`Not a single thing is urgent. A rare and beautiful sky. 🌤️`],4)};
+  if(od>=5) return {m:'normal',t:seededPick([`A few things are ripe — <b>no guilt</b>, they'll keep. Pick one if the energy is there. 💛`,`The list looks big, but one small thing counts. It always does.`],5)};
+  return {m:'normal',t:seededPick([`Welcome back. <b>${od} thing${od>1?'s':''}</b> would love attention — whenever suits.`,`A gentle day. ${st>1?`<b>${st}-day streak</b> going — `:''}one small chore keeps the thread. 🧶`],6)};
+}
+const OWL_SPECIAL_MSGS=[
+  `That was <b>his beat</b> once… and you just handled it beautifully. He'd be so proud. 🦉💛`,
+  `One of Owl's old chores — done by you, like it was nothing. The nest is in good wings.`,
+  `You took on <b>his territory</b> and won. Extra warm wing-hug for this one. 🤍`,
+];
+const DONE_MSGS=[
+  `Lovely. The nest just got a little softer. 🪶`,
+  `Logged it! Small thing, real difference.`,
+  `✓ — and it counts even more on a tired day.`,
+  `The house says thank you. So do I.`,
+];
+
+/* ================= render ================= */
+let FILTER='all';
+function renderChips(){
+  const el=document.getElementById('chips');
+  el.innerHTML=CATS.map(([k,l])=>`<button class="chip ${FILTER===k?'on':''}" data-k="${k}">${l}</button>`).join('');
+  el.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{FILTER=b.dataset.k;render()});
+}
+function groupOf(st,c){
+  if(st.isDone)return 3;
+  if(st.r>=0.95)return 0;
+  if(st.r>=0.5)return 1;
+  return 2;
+}
+const GROUPS=[
+  ['🦉 Owl suggests','ripe for today'],
+  ['Coming up','soon, when it suits'],
+  ['Resting easy','all fresh'],
+  ['Done today 💛','you did these'],
+];
+function cardHTML(c,st){
+  const col=statusColor(st.r,st.never&&!st.isDone);
+  const fill=st.isDone?100:Math.min(100,Math.round(st.r*100));
+  const dn=st.isDone?'✓':(st.never?'—':st.ds);
+  const dl=st.isDone?'done':(st.never?'log it':(st.ds===0?'today':(st.ds===1?'day ago':'days ago')));
+  return `<div class="card ${st.isDone?'done':''}" data-id="${c.id}">
+    <div class="edge" style="background:${col}"></div>
+    <div class="emoji">${c.e}</div>
+    <div class="cbody">
+      <div class="cname">${c.name}${c.owl?'<span class="owlbadge">🦉</span>':''}</div>
+      <div class="csug">${st.sug}${c.tip&&!st.isDone?` <span style="opacity:.6">· ${c.tip}</span>`:''}</div>
+      <div class="cbar"><i style="width:${fill}%;background:${col}"></i></div>
+    </div>
+    <button class="daybtn" style="border-color:${col}" aria-label="log ${c.name}">
+      <span class="dn">${dn}</span><span class="dl">${dl}</span>
+    </button>
+  </div>`;
+}
+function render(){
+  document.getElementById('dateline').textContent=fmtDay(todayNum());
+  // stats
+  document.getElementById('stToday').textContent=countToday();
+  document.getElementById('stStreak').textContent=streak();
+  document.getElementById('stWeek').textContent=countWeek();
+  // list
+  let chores=visChores();
+  if(FILTER==='owl')chores=chores.filter(c=>c.owl);
+  else if(FILTER!=='all')chores=chores.filter(c=>c.cat===FILTER);
+  const buckets=[[],[],[],[]];
+  for(const c of chores){const st=choreState(c);buckets[groupOf(st,c)].push([c,st]);}
+  buckets[0].sort((a,b)=>b[1].r-a[1].r);
+  buckets[1].sort((a,b)=>b[1].r-a[1].r);
+  buckets[2].sort((a,b)=>b[1].r-a[1].r);
+  let html='';
+  buckets.forEach((arr,i)=>{
+    if(!arr.length)return;
+    html+=`<div class="groupTitle serif">${GROUPS[i][0]} <small>${GROUPS[i][1]}</small></div>`;
+    html+=arr.map(([c,st])=>cardHTML(c,st)).join('');
+  });
+  if(!html)html='<div class="empty">Nothing here — the nest rests. 🌙</div>';
+  document.getElementById('list').innerHTML=html;
+  document.querySelectorAll('.card .daybtn').forEach(b=>{
+    b.onclick=e=>{e.stopPropagation();toggleChore(b.closest('.card').dataset.id,e)};
+  });
+  // owl line
+  const line=defaultOwlLine();owlSpeak(line.t,line.m);
+  renderChips();
+}
+
+/* ================= actions ================= */
+let lastAction=null;
+function toggleChore(id,ev){
+  const c=allChores().find(x=>x.id===id); if(!c)return;
+  if(doneToday(id)){
+    // unlog today's entry
+    const t=todayNum();
+    for(let i=S.done.length-1;i>=0;i--)if(S.done[i].c===id&&dayNum(S.done[i].t)===t){S.done.splice(i,1);break}
+    save();render();toast(`Unlogged “${c.name}”.`,null);
+    return;
+  }
+  S.done.push({c:id,t:Date.now()});
+  S.firstRun=false;save();
+  lastAction=id;
+  celebrate(ev,c.owl);
+  const msg=c.owl?seededPick(OWL_SPECIAL_MSGS,hash(id)+countToday()):seededPick(DONE_MSGS,hash(id)+countToday());
+  render();
+  owlSpeak(msg,c.owl?'proud':'happy');
+  toast(`✓ ${c.name}`,()=>{ // undo
+    const t=todayNum();
+    for(let i=S.done.length-1;i>=0;i--)if(S.done[i].c===id&&dayNum(S.done[i].t)===t){S.done.splice(i,1);break}
+    save();render();
+  });
+  maybeBackupNudge();
+}
+function celebrate(ev,special){
+  const x=ev&&ev.clientX?ev.clientX:window.innerWidth-60, y=ev&&ev.clientY?ev.clientY:200;
+  const glyphs=special?['💛','🦉','✨','🤍','💛']:['✨','🌿','💛'];
+  const n=special?7:4;
+  for(let i=0;i<n;i++){
+    const s=document.createElement('div');s.className='heart';s.textContent=glyphs[i%glyphs.length];
+    s.style.left=(x-10+(Math.random()*44-22))+'px';s.style.top=(y-10+(Math.random()*16-8))+'px';
+    s.style.animationDelay=(i*70)+'ms';
+    document.body.appendChild(s);setTimeout(()=>s.remove(),1400);
+  }
+}
+let toastTimer=null;
+function toast(msg,onUndo){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  const btn=document.getElementById('toastBtn');
+  btn.style.display=onUndo?'':'none';
+  btn.onclick=()=>{if(onUndo)onUndo();hideToast()};
+  t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(hideToast,4200);
+}
+function hideToast(){document.getElementById('toast').classList.remove('show')}
+function maybeBackupNudge(){
+  const n=todayNum();
+  if(!S.lastBackupNudge)S.lastBackupNudge=n;
+  else if(n-S.lastBackupNudge>=14){S.lastBackupNudge=n;save();
+    setTimeout(()=>toast('🪶 Two weeks of logs! Owl suggests a backup (Care tab).',null),4600);}
+}
+
+/* ================= low energy ================= */
+document.getElementById('lowEnergyBtn').onclick=()=>{
+  const small=['vent','tidy','robot','robot_water','foodwaste','entry','dishes'];
+  const cands=visChores().filter(c=>small.includes(c.id)&&!doneToday(c.id))
+    .map(c=>[c,choreState(c).r]).sort((a,b)=>b[1]-a[1]);
+  if(!cands.length){owlSpeak(`Everything small is already done. Today, resting <b>is</b> the chore. Curl up. 🌙`,'sleepy');return}
+  const c=cands[0][0];
+  owlSpeak(`Then let's keep it tiny: just <b>${c.name}</b> ${c.e}. Everything else can wait — I mean it. 💛`,'happy');
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+/* ================= export ================= */
+function buildExport(){
+  const t=todayNum();
+  const doneIds=[...new Set(S.done.filter(d=>dayNum(d.t)===t).map(d=>d.c))];
+  const cs=allChores();
+  let lines=[`🦉 Nest — ${fmtDay(t)}`];
+  if(!doneIds.length){lines.push('— a rest day 🌙');}
+  else{
+    for(const id of doneIds){const c=cs.find(x=>x.id===id);lines.push(`✓ ${c?c.name:id}`)}
+    const st=streak();
+    lines.push(`— ${doneIds.length} done${st>1?` · ${st}-day streak 💛`:''}`);
+  }
+  return lines.join('\n');
+}
+document.getElementById('exportBtn').onclick=async()=>{
+  const txt=buildExport();
+  let ok=false;
+  try{await navigator.clipboard.writeText(txt);ok=true}catch(e){
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity=0;
+    document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(e2){}ta.remove();
+  }
+  if(navigator.share){
+    toast(ok?'Copied! Paste it in Telegram 📨':'Ready to share',()=>{navigator.share({text:txt}).catch(()=>{})});
+    document.getElementById('toastBtn').textContent='Share…';
+    setTimeout(()=>{document.getElementById('toastBtn').textContent='Undo'},4500);
+  }else{
+    toast(ok?'Copied! Paste it in Telegram 📨':'Could not copy — long-press to select.',null);
+  }
+};
+
+/* ================= history sheet ================= */
+function renderHistory(){
+  const cs=allChores(),t=todayNum();
+  let html='';
+  for(let n=t;n>t-14;n--){
+    const ids=[...new Set(S.done.filter(d=>dayNum(d.t)===n).map(d=>d.c))];
+    const label=n===t?'Today':(n===t-1?'Yesterday':fmtDay(n));
+    if(!ids.length){
+      html+=`<div class="hday rest"><div class="hd">${label}<small>rest day 🌙</small></div></div>`;
+    }else{
+      html+=`<div class="hday"><div class="hd">${label}<small>${ids.length} done</small></div><ul>`+
+        ids.map(id=>{const c=cs.find(x=>x.id===id);return `<li><b>✓</b> ${c?c.e+' '+c.name:id}</li>`}).join('')+'</ul></div>';
+    }
+  }
+  const total=S.done.length;
+  html+=`<div class="sub" style="text-align:center;margin-top:12px">${total} chores logged all-time · the nest remembers 🪶</div>`;
+  document.getElementById('historyBody').innerHTML=html;
+}
+
+/* ================= manage sheet ================= */
+function renderManage(){
+  const el=document.getElementById('manageBody');
+  el.innerHTML=allChores().map(c=>{
+    const hid=S.hidden.includes(c.id);
+    return `<div class="mrow ${hid?'hidden':''}" data-id="${c.id}">
+      <span style="font-size:18px">${c.e}</span>
+      <div class="mn">${c.name}<small>${c.fixed?'fixed: '+c.fixed.map(d=>WD[d]).join(' & '):'every '+c.iv+' day'+(c.iv>1?'s':'')}</small></div>
+      ${c.fixed?'':`<div class="stepper">
+        <button class="ivdown">−</button>
+        <div class="iv">${c.iv}<small>days</small></div>
+        <button class="ivup">＋</button>
+      </div>`}
+      <button class="mhide" title="hide">${hid?'🚫':'👁️'}</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.mrow').forEach(row=>{
+    const id=row.dataset.id;
+    const up=row.querySelector('.ivup'),down=row.querySelector('.ivdown');
+    if(up)up.onclick=()=>{S.iv[id]=(S.iv[id]||allChores().find(c=>c.id===id).iv)+1;save();renderManage();render()};
+    if(down)down.onclick=()=>{const cur=S.iv[id]||allChores().find(c=>c.id===id).iv;S.iv[id]=Math.max(1,cur-1);save();renderManage();render()};
+    row.querySelector('.mhide').onclick=()=>{
+      const i=S.hidden.indexOf(id);
+      if(i>=0)S.hidden.splice(i,1);else S.hidden.push(id);
+      save();renderManage();render();
+    };
+  });
+}
+document.getElementById('addToggle').onclick=()=>document.getElementById('addForm').classList.toggle('open');
+document.getElementById('addSave').onclick=()=>{
+  const name=document.getElementById('addName').value.trim();
+  const emoji=document.getElementById('addEmoji').value.trim()||'🏡';
+  const days=Math.max(1,Math.min(365,parseInt(document.getElementById('addDays').value)||7));
+  if(!name)return;
+  S.custom.push({id:'cx_'+Date.now().toString(36),name,e:emoji,iv:days,cat:days<=2?'daily':days<=5?'often':days<=14?'weekly':days<=45?'monthly':'seasonal'});
+  save();
+  document.getElementById('addName').value='';document.getElementById('addEmoji').value='';document.getElementById('addDays').value='';
+  document.getElementById('addForm').classList.remove('open');
+  renderManage();render();toast('Added to the nest 🪺',null);
+};
+
+/* ================= backup / restore ================= */
+document.getElementById('backupBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  const d=new Date();a.download=`nest-backup-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+  toast('Backup saved to Files 💾',null);
+};
+document.getElementById('restoreBtn').onclick=()=>document.getElementById('restoreFile').click();
+document.getElementById('restoreFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const data=JSON.parse(r.result);
+    if(!Array.isArray(data.done))throw new Error('bad file');
+    S=Object.assign({done:[],custom:[],iv:{},hidden:[],firstRun:false,lastBackupNudge:0},data);
+    save();render();renderManage();toast('Restored! Welcome back 🪺',null);
+  }catch(err){toast('Hmm, that file doesn\'t look like a Nest backup.',null)}};
+  r.readAsText(f);
+  e.target.value='';
+};
+
+/* ================= sheets & tabs ================= */
+const sheets={history:document.getElementById('historySheet'),manage:document.getElementById('manageSheet')};
+const back=document.getElementById('sheetback');
+let openSheet=null;
+function showSheet(name){
+  Object.entries(sheets).forEach(([k,s])=>{if(k!==name)s.classList.remove('open')});
+  if(name==='history')renderHistory(); if(name==='manage')renderManage();
+  back.classList.add('open');sheets[name].classList.add('open');openSheet=name;
+}
+function closeSheets(){
+  back.classList.remove('open');Object.values(sheets).forEach(s=>s.classList.remove('open'));openSheet=null;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.view==='home'));
+}
+back.onclick=closeSheets;
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  const v=t.dataset.view;
+  if(v==='home')closeSheets();else showSheet(v);
+});
+
+/* ================= ambience ================= */
+(function stars(){
+  const wrap=document.getElementById('stars');
+  for(let i=0;i<26;i++){const s=document.createElement('i');
+    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*70+'%';
+    s.style.animationDelay=(Math.random()*3)+'s';wrap.appendChild(s);}
+  const dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+  function setMoon(){document.getElementById('moon').style.display=dark.matches?'':'none'}
+  if(dark){setMoon();dark.addEventListener&&dark.addEventListener('change',setMoon)}
+})();
+
+/* re-render when the logical day rolls over or app returns to foreground */
+let seenDay=todayNum();
+setInterval(()=>{if(todayNum()!==seenDay){seenDay=todayNum();render()}},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+
+render();
+</script>
+</body>
+</html>
