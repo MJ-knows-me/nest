@@ -440,7 +440,8 @@ const CHORES=[
  {id:'vent',    name:'Air the house', e:'🌬️', cat:'daily', iv:1, tip:'ten minutes of open windows'},
  {id:'robot',   name:'Robot vacuum & mop run', e:'🤖', cat:'daily', iv:1},
  {id:'tidy',    name:'10-minute tidy', e:'✨', cat:'daily', iv:1, tip:'things back where they live'},
- {id:'dishes',  name:'Dish cycle', e:'🍽️', cat:'daily', iv:2, tip:'rinse → dishwasher → unload'},
+ {id:'dish_prep', name:'Dish prep & load', e:'🧼', cat:'daily', iv:1, tip:'quick hand-rinse, into the machine'},
+ {id:'dishes',  name:'Dishwasher & unload', e:'🍽️', cat:'daily', iv:2, tip:'run when full, unload after'},
  {id:'kitchen', name:'Kitchen reset', e:'🍳', cat:'daily', iv:2, tip:'counters & stovetop'},
  // flexible
  {id:'laundry_wash', name:'Laundry — wash & hang', e:'👕', cat:'often', iv:4, owl:1},
@@ -467,6 +468,7 @@ const CHORES=[
  {id:'hood',    name:'Range hood degrease', e:'♨️', cat:'seasonal', iv:90},
  {id:'window_deep', name:'Window tracks & screens', e:'🧽', cat:'seasonal', iv:90},
  {id:'duvet',   name:'Duvet & blankets wash', e:'☁️', cat:'seasonal', iv:120},
+ {id:'lg_service', name:'LG washer-dryer service visit', e:'🧑‍🔧', cat:'seasonal', iv:180, tip:'be home & follow the technician\'s lead'},
 ];
 const CATS=[['all','All'],['daily','Daily'],['often','Often'],['weekly','Weekly'],['monthly','Monthly'],['seasonal','Seasonal'],['owl',"🦉 Owl's beat"]];
 </script>
@@ -719,7 +721,7 @@ function maybeBackupNudge(){
 
 /* ================= low energy ================= */
 document.getElementById('lowEnergyBtn').onclick=()=>{
-  const small=['vent','tidy','robot','robot_water','foodwaste','entry','dishes'];
+  const small=['vent','tidy','robot','robot_water','foodwaste','entry','dish_prep'];
   const cands=visChores().filter(c=>small.includes(c.id)&&!doneToday(c.id))
     .map(c=>[c,choreState(c).r]).sort((a,b)=>b[1]-a[1]);
   if(!cands.length){owlSpeak(`Everything small is already done. Today, resting <b>is</b> the chore. Curl up. 🌙`,'sleepy');return}
