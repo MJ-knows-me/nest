@@ -272,6 +272,12 @@ nav.tabs{
 }
 .addform{background:var(--card);border:1.5px solid var(--card-edge);border-radius:16px;padding:12px;margin:8px 0;display:none;flex-direction:column;gap:8px}
 .addform.open{display:flex}
+.tgbox{background:var(--card);border:1.5px solid var(--card-edge);border-radius:16px;padding:12px;margin:14px 0 4px}
+.tgbox .tgtitle{font-weight:800;font-size:14px;margin-bottom:4px}
+.tgbox input{
+  border:1.5px solid var(--card-edge);border-radius:11px;background:var(--bg);
+  padding:10px 12px;font:600 13px 'Varela Round';color:var(--ink);width:100%;margin-bottom:7px;
+}
 .addform input{
   border:1.5px solid var(--card-edge);border-radius:11px;background:var(--bg);
   padding:10px 12px;font:600 14px 'Varela Round';color:var(--ink);width:100%;
@@ -421,12 +427,22 @@ nav.tabs{
     <button id="addSave">Add to the nest</button>
   </div>
   <div id="manageBody"></div>
+  <div class="tgbox">
+    <div class="tgtitle">📨 Telegram one-tap export</div>
+    <div class="sub" style="margin-bottom:8px">Fill these in and the Export button sends tonight's log straight to your bot chat (and still copies it, just in case). Both are stored only on this phone — never in the public repo.</div>
+    <input id="tgToken" placeholder="Bot token (from BotFather)" autocomplete="off">
+    <input id="tgChat" placeholder="Chat ID" autocomplete="off" inputmode="numeric">
+    <div class="mgmtbtns" style="margin:8px 0 0">
+      <button id="tgDetect">🔍 Detect chat ID</button>
+      <button id="tgTest">🕊️ Send test</button>
+    </div>
+  </div>
   <div class="mgmtbtns">
     <button id="backupBtn">💾 Back up data</button>
     <button id="restoreBtn">📥 Restore</button>
   </div>
   <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
-  <div class="sub" style="margin-top:10px">Everything lives on this phone only. A backup file is your safety net — Owl suggests one every couple of weeks. 💛<br><br><span style="opacity:.7">Days roll over at 4 AM, so post-midnight tidying still counts as tonight.</span></div>
+  <div class="sub" style="margin-top:10px">Everything lives on this phone only. A backup file is your safety net — Owl suggests one every couple of weeks. 💛<br><br><span style="opacity:.7">Days roll over at 4 AM, so post-midnight tidying still counts as tonight. · Nest v4</span></div>
 </div>
 
 <div id="toast"><div class="msg" id="toastMsg"></div><button id="toastBtn">Undo</button></div>
@@ -474,8 +490,10 @@ const CATS=[['all','All'],['daily','Daily'],['often','Often'],['weekly','Weekly'
 </script>
 <script id="app-logic">
 /* ================= state ================= */
-let S={done:[],custom:[],iv:{},hidden:[],firstRun:true,lastBackupNudge:0};
+let S={done:[],custom:[],iv:{},hidden:[],firstRun:true,lastBackupNudge:0,tg:{token:'',chat:''},lastExport:0};
 try{const raw=localStorage.getItem(LS_KEY); if(raw){S=Object.assign(S,JSON.parse(raw)); S.firstRun=false;}}catch(e){}
+if(!S.tg)S.tg={token:'',chat:''};
+if(!S.lastExport)S.lastExport=0;
 function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(S))}catch(e){}}
 
 /* ================= time helpers ================= */
@@ -577,6 +595,7 @@ function owlSpeak(txt,mode){
 function defaultOwlLine(){
   const h=new Date().getHours(), t=countToday(), od=overdueCount(), st=streak();
   if(S.firstRun) return {m:'normal',t:`Hello, Alex. I'm minding the nest with you while he's away. 🪶 No schedules here — just log things when you do them, and I'll tell you what's ripe.`};
+  if((h>=22||h<DAY_CUTOFF_H)&&t>0&&S.lastExport!==todayNum()) return {m:'normal',t:`Before you roost — tonight's <b>${t} chore${t>1?'s':''}</b> haven't flown to your logger yet. Tap <b>📤 Export</b> below. 📨`};
   if(h>=DAY_CUTOFF_H&&h<5.01&&t===0){} // fallthrough
   if(h<DAY_CUTOFF_H||h>=23) return {m:'sleepy',t:seededPick([`Fellow night owl 🌙 anything you log now still counts as tonight. Then — rest.`,`The nest is quiet. One tiny thing, or straight to bed — both are wins. 🌙`],1)};
   if(t>=4) return {m:'proud',t:seededPick([`<b>${t} things today?!</b> The nest has never been safer. I'm beaming. 💛`,`You absolute force of nature. <b>${t} done.</b> Perch and rest now?`],2)};
@@ -744,19 +763,47 @@ function buildExport(){
   }
   return lines.join('\n');
 }
+async function copyText(txt){
+  try{await navigator.clipboard.writeText(txt);return true}catch(e){
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity=0;
+    document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e2){}ta.remove();return ok;
+  }
+}
+async function tgSend(text){
+  const tg=S.tg||{};
+  if(!tg.token||!tg.chat)return {skipped:true};
+  try{
+    const r=await fetch('https://api.telegram.org/bot'+tg.token.trim()+'/sendMessage',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:tg.chat.trim(),text})
+    });
+    const j=await r.json();
+    return j.ok?{ok:true}:{err:j.description||('HTTP '+r.status)};
+  }catch(e){return {err:'network — are you online?'}}
+}
 document.getElementById('exportBtn').onclick=async()=>{
   const txt=buildExport();
-  let ok=false;
-  try{await navigator.clipboard.writeText(txt);ok=true}catch(e){
-    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity=0;
-    document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(e2){}ta.remove();
+  const copied=await copyText(txt);
+  const res=await tgSend(txt);
+  if(res.ok){
+    S.lastExport=todayNum();save();
+    toast('📨 Sent to your Telegram logger — and copied, belt & suspenders.',null);
+    owlSpeak('Tonight\'s log has flown. The day is officially complete. 🌙','happy');
+    return;
   }
+  if(res.err){
+    toast('⚠️ Telegram send failed ('+res.err+') — copied instead, paste it manually.',null);
+    if(copied)S.lastExport=todayNum(),save();
+    return;
+  }
+  // no Telegram configured — classic copy/share flow
+  if(copied){S.lastExport=todayNum();save()}
   if(navigator.share){
-    toast(ok?'Copied! Paste it in Telegram 📨':'Ready to share',()=>{navigator.share({text:txt}).catch(()=>{})});
+    toast(copied?'Copied! Paste it in Telegram 📨':'Ready to share',()=>{navigator.share({text:txt}).catch(()=>{})});
     document.getElementById('toastBtn').textContent='Share…';
     setTimeout(()=>{document.getElementById('toastBtn').textContent='Undo'},4500);
   }else{
-    toast(ok?'Copied! Paste it in Telegram 📨':'Could not copy — long-press to select.',null);
+    toast(copied?'Copied! Paste it in Telegram 📨':'Could not copy — long-press to select.',null);
   }
 };
 
@@ -820,6 +867,35 @@ document.getElementById('addSave').onclick=()=>{
   renderManage();render();toast('Added to the nest 🪺',null);
 };
 
+/* ================= telegram settings ================= */
+function syncTgInputs(){
+  document.getElementById('tgToken').value=(S.tg&&S.tg.token)||'';
+  document.getElementById('tgChat').value=(S.tg&&S.tg.chat)||'';
+}
+document.getElementById('tgToken').oninput=e=>{S.tg.token=e.target.value.trim();save()};
+document.getElementById('tgChat').oninput=e=>{S.tg.chat=e.target.value.trim();save()};
+document.getElementById('tgDetect').onclick=async()=>{
+  if(!S.tg.token){toast('Paste your bot token first 🙂',null);return}
+  toast('Looking for your chat…',null);
+  try{
+    const r=await fetch('https://api.telegram.org/bot'+S.tg.token+'/getUpdates');
+    const j=await r.json();
+    if(!j.ok){
+      toast(r.status===409?'Your bot uses a webhook, so I can\'t peek. Message @userinfobot on Telegram to get your ID, then type it here.':'Telegram said: '+(j.description||'error'),null);
+      return;
+    }
+    const msgs=(j.result||[]).map(u=>u.message||u.edited_message).filter(Boolean);
+    if(!msgs.length){toast('No messages found — send your bot any message on Telegram, then tap Detect again.',null);return}
+    S.tg.chat=String(msgs[msgs.length-1].chat.id);save();syncTgInputs();
+    toast('Found it! Chat ID '+S.tg.chat+' ✓ Now try Send test.',null);
+  }catch(e){toast('Couldn\'t reach Telegram — check your connection.',null)}
+};
+document.getElementById('tgTest').onclick=async()=>{
+  if(!S.tg.token||!S.tg.chat){toast('Need both token and chat ID first 🙂',null);return}
+  const res=await tgSend('🦉 Test from Nest — if you can read this, one-tap export is ready!');
+  toast(res.ok?'🕊️ Test sent! Check your bot chat (and whether your logger noticed it).':'⚠️ '+(res.err||'failed'),null);
+};
+
 /* ================= backup / restore ================= */
 document.getElementById('backupBtn').onclick=()=>{
   const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
@@ -835,7 +911,8 @@ document.getElementById('restoreFile').onchange=e=>{
   r.onload=()=>{try{
     const data=JSON.parse(r.result);
     if(!Array.isArray(data.done))throw new Error('bad file');
-    S=Object.assign({done:[],custom:[],iv:{},hidden:[],firstRun:false,lastBackupNudge:0},data);
+    S=Object.assign({done:[],custom:[],iv:{},hidden:[],firstRun:false,lastBackupNudge:0,tg:{token:'',chat:''},lastExport:0},data);
+    if(!S.tg)S.tg={token:'',chat:''};
     save();render();renderManage();toast('Restored! Welcome back 🪺',null);
   }catch(err){toast('Hmm, that file doesn\'t look like a Nest backup.',null)}};
   r.readAsText(f);
@@ -848,7 +925,7 @@ const back=document.getElementById('sheetback');
 let openSheet=null;
 function showSheet(name){
   Object.entries(sheets).forEach(([k,s])=>{if(k!==name)s.classList.remove('open')});
-  if(name==='history')renderHistory(); if(name==='manage')renderManage();
+  if(name==='history')renderHistory(); if(name==='manage'){renderManage();syncTgInputs()}
   back.classList.add('open');sheets[name].classList.add('open');openSheet=name;
 }
 function closeSheets(){
