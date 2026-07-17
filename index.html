@@ -220,6 +220,9 @@ nav.tabs{
 .tab{flex:1;border:none;background:none;color:var(--ink-soft);font:800 10.5px 'Varela Round',sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.3px}
 .tab span.ic{font-size:21px;line-height:1}
 .tab.on{color:var(--accent)}
+.tab.exp{color:var(--accent);font-weight:800}
+.tab.exp .ic{background:var(--accent-soft);border-radius:12px;padding:2px 10px}
+.tab.exp:active{transform:scale(.92)}
 
 /* ---------- sheets ---------- */
 .sheetback{
@@ -394,14 +397,11 @@ nav.tabs{
 
 <main id="list"></main>
 
-<div class="exportwrap">
-  <button class="exportbtn" id="exportBtn">📤 Copy today's log <small>for Telegram</small></button>
-</div>
-
 <nav class="tabs">
   <button class="tab on" data-view="home"><span class="ic">🪺</span>Nest</button>
   <button class="tab" data-view="history"><span class="ic">📖</span>Journal</button>
   <button class="tab" data-view="manage"><span class="ic">🪶</span>Care</button>
+  <button class="tab exp" id="exportBtn"><span class="ic">📤</span>Export</button>
 </nav>
 
 <div class="sheetback" id="sheetback"></div>
@@ -442,7 +442,7 @@ nav.tabs{
     <button id="restoreBtn">📥 Restore</button>
   </div>
   <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
-  <div class="sub" style="margin-top:10px">Everything lives on this phone only. A backup file is your safety net — Owl suggests one every couple of weeks. 💛<br><br><span style="opacity:.7">Days roll over at 4 AM, so post-midnight tidying still counts as tonight. · Nest v4</span></div>
+  <div class="sub" style="margin-top:10px">Everything lives on this phone only. A backup file is your safety net — Owl suggests one every couple of weeks. 💛<br><br><span style="opacity:.7">Days roll over at 4 AM, so post-midnight tidying still counts as tonight. · Nest v5</span></div>
 </div>
 
 <div id="toast"><div class="msg" id="toastMsg"></div><button id="toastBtn">Undo</button></div>
@@ -933,8 +933,8 @@ function closeSheets(){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.view==='home'));
 }
 back.onclick=closeSheets;
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+document.querySelectorAll('.tab[data-view]').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab[data-view]').forEach(x=>x.classList.remove('on'));t.classList.add('on');
   const v=t.dataset.view;
   if(v==='home')closeSheets();else showSheet(v);
 });
