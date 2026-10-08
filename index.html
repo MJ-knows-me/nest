@@ -251,6 +251,27 @@ nav.tabs{
 .hday li{font-size:13px;font-weight:600;color:var(--ink-soft);padding:2.5px 0;display:flex;gap:7px;align-items:center}
 .hday li b{color:var(--sage-deep)}
 .hday.rest .hd small{color:var(--amber)}
+.hday li span{min-width:0}
+.hday .hnote{font-style:normal;opacity:.75;font-weight:600}
+
+/* log sheet */
+.logtags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.lognote{
+  width:100%;border:1.5px solid var(--card-edge);border-radius:13px;background:var(--card);
+  padding:12px 13px;font:600 16px 'Varela Round',sans-serif;color:var(--ink);margin-bottom:10px;
+}
+.logpartial{
+  width:100%;border:1.5px dashed var(--ink-faint);background:transparent;color:var(--ink-soft);
+  border-radius:13px;padding:11px;font:800 13.5px 'Varela Round',sans-serif;margin-bottom:12px;
+}
+.logpartial.on{border-style:solid;border-color:var(--amber);color:var(--ink);background:var(--accent-soft)}
+.logpartial b{color:var(--amber)}
+.logsave{
+  width:100%;border:none;background:var(--ink);color:var(--bg);border-radius:16px;
+  padding:15px;font:800 15.5px 'Varela Round',sans-serif;box-shadow:var(--shadow);
+}
+.logsave:active{transform:scale(.98)}
+.logunlog{width:100%;border:none;background:none;color:var(--rust);font:800 13px 'Varela Round',sans-serif;padding:14px 0 0}
 
 /* manage */
 .mrow{
@@ -442,7 +463,18 @@ nav.tabs{
     <button id="restoreBtn">📥 Restore</button>
   </div>
   <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
-  <div class="sub" style="margin-top:10px">Everything lives on this phone only. A backup file is your safety net — Owl suggests one every couple of weeks. 💛<br><br><span style="opacity:.7">Days roll over at 4 AM, so post-midnight tidying still counts as tonight. · Nest v5</span></div>
+  <div class="sub" style="margin-top:10px">Everything lives on this phone only. A backup file is your safety net — Owl suggests one every couple of weeks. 💛<br><br><span style="opacity:.7">Days roll over at 4 AM, so post-midnight tidying still counts as tonight. · Nest v6</span></div>
+</div>
+
+<div class="sheet" id="logSheet">
+  <div class="grab"></div>
+  <h2 class="serif" id="logTitle"></h2>
+  <div class="sub" id="logSub"></div>
+  <div class="logtags" id="logTags"></div>
+  <input id="logNote" class="lognote" maxlength="80" autocomplete="off">
+  <button class="logpartial" id="logPartial"></button>
+  <button class="logsave" id="logSave">Log it ✓</button>
+  <button class="logunlog hidden" id="logUnlog">Unlog today's entry</button>
 </div>
 
 <div id="toast"><div class="msg" id="toastMsg"></div><button id="toastBtn">Undo</button></div>
@@ -451,20 +483,25 @@ nav.tabs{
 /* ================= data ================= */
 const LS_KEY='nest.owl.v1';
 const DAY_CUTOFF_H=4; // logical day starts at 4am — for night owls
+/* How chores work (v6):
+   - Each log entry stores only the chore's id + time (+ optional tags, note, partial flag).
+     Names are looked up here, so NEVER rename an existing item — retire it and add a new id.
+   - retired:1  → hidden from the list & Care tab, but kept so old journal entries keep their old name.
+   - from:[ids] → a new item "inherits" the last-done date of the items it replaced, so Owl's day count carries over.
+   - tags:[...] → quick-pick labels offered when logging; ph = placeholder for the note box. */
 const CHORES=[
  // daily rhythm
- {id:'vent',    name:'Air the house', e:'🌬️', cat:'daily', iv:1, tip:'ten minutes of open windows'},
- {id:'robot',   name:'Robot vacuum & mop run', e:'🤖', cat:'daily', iv:1},
- {id:'tidy',    name:'10-minute tidy', e:'✨', cat:'daily', iv:1, tip:'things back where they live'},
- {id:'dish_prep', name:'Dish prep & load', e:'🧼', cat:'daily', iv:1, tip:'quick hand-rinse, into the machine'},
- {id:'dishes',  name:'Dishwasher & unload', e:'🍽️', cat:'daily', iv:2, tip:'run when full, unload after'},
+ {id:'vent',    name:'Air the house', e:'🌬️', cat:'daily', iv:2, tip:'ten minutes of open windows'},
+ {id:'robot_run', name:'Robot run', e:'🤖', cat:'daily', iv:2, tags:['청소기','물걸레'], from:['robot']},
+ {id:'tidy',    name:'10-minute tidy', e:'✨', cat:'daily', iv:1, tip:'things back where they live', ph:'What did you tidy? (e.g. 책상, 거실)'},
+ {id:'dish',    name:'Dishes', e:'🍽️', cat:'daily', iv:2, tags:['애벌·넣기','식세기 돌림','꺼내기','손설거지'], from:['dish_prep','dishes']},
  {id:'kitchen', name:'Kitchen reset', e:'🍳', cat:'daily', iv:2, tip:'counters & stovetop'},
  // flexible
- {id:'laundry_wash', name:'Laundry — wash & hang', e:'👕', cat:'often', iv:4, owl:1},
- {id:'laundry_fold', name:'Laundry — fold & put away', e:'🧺', cat:'often', iv:4, owl:1},
+ {id:'laundry', name:'Laundry', e:'👕', cat:'often', iv:3, owl:1, tags:['수건','속옷','일반','이불'], from:['laundry_wash','laundry_fold']},
  {id:'foodwaste',    name:'Food waste run', e:'🥬', cat:'often', iv:3, owl:1},
  {id:'robot_water',  name:'Robot — empty & refill water', e:'💧', cat:'often', iv:3},
- {id:'recycle',      name:'Recycling & trash out', e:'♻️', cat:'often', fixed:[3,0], iv:4, owl:1}, // Wed & Sun
+ {id:'recycling',    name:'Recycling out', e:'♻️', cat:'often', fixed:[3,0], iv:4, owl:1, from:['recycle']}, // Wed & Sun
+ {id:'trash',        name:'Trash out', e:'🗑️', cat:'often', iv:5, owl:1, from:['recycle']},
  {id:'dust',    name:'Dusting all around', e:'🪶', cat:'weekly', iv:7},
  {id:'entry',   name:'Entryway & shoes', e:'👟', cat:'weekly', iv:7},
  {id:'vac_manual', name:'Vacuum the corners', e:'🧹', cat:'weekly', iv:7, tip:'spots the robot can’t reach'},
@@ -473,10 +510,10 @@ const CHORES=[
  {id:'bath_second', name:'Second bathroom clean', e:'🚿', cat:'weekly', iv:14, owl:1, tip:'offset it a week from the main one'},
  // monthly
  {id:'fridge',  name:'Fridge purge', e:'🧊', cat:'monthly', iv:30},
+ {id:'freezer', name:'Freezer purge', e:'🥶', cat:'monthly', iv:60},
  {id:'dw_filter', name:'Dishwasher filter', e:'🫧', cat:'monthly', iv:30},
  {id:'robot_maint', name:'Robot filter & brushes', e:'🛠️', cat:'monthly', iv:30},
  {id:'drains',  name:'Bathroom drains', e:'🚰', cat:'monthly', iv:30},
- {id:'wm_clean', name:'Washing machine self-clean', e:'🌀', cat:'monthly', iv:30},
  {id:'restock', name:'Restock check', e:'🧻', cat:'monthly', iv:30, tip:'detergent, tissue, sponges…'},
  {id:'windows', name:'Windows & sills', e:'🪟', cat:'monthly', iv:30},
  // seasonal
@@ -485,6 +522,14 @@ const CHORES=[
  {id:'window_deep', name:'Window tracks & screens', e:'🧽', cat:'seasonal', iv:90},
  {id:'duvet',   name:'Duvet & blankets wash', e:'☁️', cat:'seasonal', iv:120},
  {id:'lg_service', name:'LG washer-dryer service visit', e:'🧑‍🔧', cat:'seasonal', iv:180, tip:'be home & follow the technician\'s lead'},
+ // retired (v6, 2026-10-08) — kept only so past journal entries keep their original names
+ {id:'robot',        name:'Robot vacuum & mop run', e:'🤖', cat:'daily', iv:1, retired:1},
+ {id:'dish_prep',    name:'Dish prep & load', e:'🧼', cat:'daily', iv:1, retired:1},
+ {id:'dishes',       name:'Dishwasher & unload', e:'🍽️', cat:'daily', iv:2, retired:1},
+ {id:'laundry_wash', name:'Laundry — wash & hang', e:'👕', cat:'often', iv:4, owl:1, retired:1},
+ {id:'laundry_fold', name:'Laundry — fold & put away', e:'🧺', cat:'often', iv:4, owl:1, retired:1},
+ {id:'recycle',      name:'Recycling & trash out', e:'♻️', cat:'often', fixed:[3,0], iv:4, owl:1, retired:1},
+ {id:'wm_clean',     name:'Washing machine self-clean', e:'🌀', cat:'monthly', iv:30, retired:1},
 ];
 const CATS=[['all','All'],['daily','Daily'],['often','Often'],['weekly','Weekly'],['monthly','Monthly'],['seasonal','Seasonal'],['owl',"🦉 Owl's beat"]];
 </script>
@@ -521,21 +566,44 @@ function allChores(){
   const custom=S.custom.map(c=>Object.assign({cat:'often'},c,{iv:S.iv[c.id]||c.iv}));
   return base.concat(custom);
 }
-function visChores(){return allChores().filter(c=>!S.hidden.includes(c.id))}
+function visChores(){return allChores().filter(c=>!c.retired&&!S.hidden.includes(c.id))}
+function choreById(id){return allChores().find(x=>x.id===id)}
 function lastDoneNum(id){
   let m=-1;
   for(const d of S.done) if(d.c===id){const n=dayNum(d.t); if(n>m)m=n;}
   return m<0?null:m;
 }
-function daysSince(id){const l=lastDoneNum(id);return l===null?null:todayNum()-l}
 function doneToday(id){return lastDoneNum(id)===todayNum()}
+function todayEntry(id){const t=todayNum();for(let i=S.done.length-1;i>=0;i--)if(S.done[i].c===id&&dayNum(S.done[i].t)===t)return S.done[i];return null}
+/* days since last done — counting the items this one replaced (c.from).
+   "eff" treats a partial job as half a reset: it counts as if done iv/2 days earlier. */
+function sinceInfo(c){
+  const ids=[c.id].concat(c.from||[]), t=todayNum();
+  let ds=null, eff=null;
+  for(const d of S.done){
+    if(!ids.includes(d.c))continue;
+    const n=t-dayNum(d.t), e=n+(d.p?c.iv/2:0);
+    if(ds===null||n<ds)ds=n;
+    if(eff===null||e<eff)eff=e;
+  }
+  return {ds,eff};
+}
+function esc(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+/* "(partial, 수건, 속옷, note)" — shown in the journal and the Telegram export */
+function entryDetail(d){
+  const parts=[];
+  if(d.p)parts.push('partial');
+  if(d.tags&&d.tags.length)parts.push(...d.tags);
+  if(d.n)parts.push(d.n);
+  return parts.length?` (${parts.join(', ')})`:'';
+}
 function nextFixedGap(days){ // days until next fixed weekday (0 if today)
   const t=todayDow();
   let g=99; for(const d of days){let x=(d-t+7)%7; if(x<g)g=x;}
   return g;
 }
 function choreState(c){
-  const ds=daysSince(c.id), isDone=doneToday(c.id);
+  const {ds,eff}=sinceInfo(c), isDone=doneToday(c.id);
   let r, sug, never=ds===null;
   if(c.fixed){
     const gap=nextFixedGap(c.fixed);
@@ -545,10 +613,10 @@ function choreState(c){
     else{r=.3;sug=`next: ${WD[c.fixed[nearestFixedIdx(c.fixed)]]}`}
     if(never&&!isDone&&gap>0)sug='next pickup: '+c.fixed.map(d=>WD[d]).join(' & ');
   }else{
-    r=never?0.6:ds/c.iv;
-    if(isDone){r=0;sug=seededPick(['done — thank you 💛','all taken care of ✓','fresh as can be ✨'],hash(c.id))}
+    r=never?0.6:eff/c.iv;
+    if(isDone){r=0;const te=todayEntry(c.id);sug=te&&te.p?'partly done — the rest can wait 💛':seededPick(['done — thank you 💛','all taken care of ✓','fresh as can be ✨'],hash(c.id))}
     else if(never){sug='not logged yet — whenever you\'re ready 🌱'}
-    else if(r<0.5){const left=Math.max(1,Math.round(c.iv-ds));sug=`all good — think about it in ~${left}d`}
+    else if(r<0.5){const left=Math.max(1,Math.round(c.iv-eff));sug=`all good — think about it in ~${left}d`}
     else if(r<0.95){sug=seededPick(['in the next day or two would be lovely','soon-ish, when it suits you','a nice pick for your next home day'],hash(c.id))}
     else if(r<1.3){sug=seededPick(['today would be perfect 🦉','ripe for today, if you have it in you','Owl gently points a wing at this one'],hash(c.id))}
     else{sug=seededPick(["it's been a while — no guilt, just a good pick 💛",'whenever energy allows — this one misses you','a fine quest for a high-energy day ⚔️'],hash(c.id))}
@@ -686,23 +754,67 @@ function render(){
 
 /* ================= actions ================= */
 let lastAction=null;
+/* tapping a chore opens the log sheet: optional tags, note, and "partial" */
+let LOG={id:null,tags:[],p:false,ev:null};
 function toggleChore(id,ev){
-  const c=allChores().find(x=>x.id===id); if(!c)return;
-  if(doneToday(id)){
-    // unlog today's entry
-    const t=todayNum();
-    for(let i=S.done.length-1;i>=0;i--)if(S.done[i].c===id&&dayNum(S.done[i].t)===t){S.done.splice(i,1);break}
-    save();render();toast(`Unlogged “${c.name}”.`,null);
-    return;
-  }
-  S.done.push({c:id,t:Date.now()});
+  const c=choreById(id); if(!c)return;
+  const ex=todayEntry(id);
+  LOG={id,tags:ex&&ex.tags?ex.tags.slice():[],p:!!(ex&&ex.p),ev:ev?{clientX:ev.clientX,clientY:ev.clientY}:null};
+  document.getElementById('logTitle').textContent=`${c.e} ${c.name}`;
+  document.getElementById('logSub').textContent=ex?'Already logged today — edit or unlog it.':(c.tip||(c.fixed?'pickup: '+c.fixed.map(d=>WD[d]).join(' & '):`about every ${c.iv} day${c.iv>1?'s':''}`));
+  const note=document.getElementById('logNote');
+  note.value=ex&&ex.n?ex.n:'';
+  note.placeholder=c.ph||'Note (optional)';
+  renderLogTags(c);
+  renderPartial();
+  document.getElementById('logSave').textContent=ex?'Save changes':'Log it ✓';
+  document.getElementById('logUnlog').classList.toggle('hidden',!ex);
+  showSheet('log');
+}
+function renderLogTags(c){
+  const el=document.getElementById('logTags');
+  const all=(c.tags||[]).concat(LOG.tags.filter(t=>!(c.tags||[]).includes(t)));
+  el.classList.toggle('hidden',!all.length);
+  el.innerHTML=all.map(t=>`<button class="chip ${LOG.tags.includes(t)?'on':''}" data-t="${esc(t)}">${esc(t)}</button>`).join('');
+  el.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+    const t=b.dataset.t,i=LOG.tags.indexOf(t);
+    if(i>=0)LOG.tags.splice(i,1);else LOG.tags.push(t);
+    b.classList.toggle('on');
+  });
+}
+function renderPartial(){
+  const b=document.getElementById('logPartial');
+  b.classList.toggle('on',LOG.p);
+  b.innerHTML=LOG.p?'½ Partial — only some of it <b>✓</b>':'½ Mark as partial';
+}
+document.getElementById('logPartial').onclick=()=>{LOG.p=!LOG.p;renderPartial()};
+document.getElementById('logUnlog').onclick=()=>{
+  const c=choreById(LOG.id),t=todayNum();
+  for(let i=S.done.length-1;i>=0;i--)if(S.done[i].c===LOG.id&&dayNum(S.done[i].t)===t){S.done.splice(i,1);break}
+  save();closeSheets();render();toast(`Unlogged “${c.name}”.`,null);
+};
+document.getElementById('logSave').onclick=()=>{
+  const id=LOG.id,c=choreById(id);
+  const n=document.getElementById('logNote').value.trim();
+  const ex=todayEntry(id);
+  const entry=ex||{c:id,t:Date.now()};
+  if(LOG.tags.length)entry.tags=LOG.tags.slice();else delete entry.tags;
+  if(n)entry.n=n;else delete entry.n;
+  if(LOG.p)entry.p=1;else delete entry.p;
+  closeSheets();
+  if(ex){save();render();toast(`✓ ${c.name}${entryDetail(entry)} — updated`,null);return}
+  logEntry(entry,c,LOG.ev);
+};
+function logEntry(entry,c,ev){
+  const id=c.id;
+  S.done.push(entry);
   S.firstRun=false;save();
   lastAction=id;
   celebrate(ev,c.owl);
   const msg=c.owl?seededPick(OWL_SPECIAL_MSGS,hash(id)+countToday()):seededPick(DONE_MSGS,hash(id)+countToday());
   render();
   owlSpeak(msg,c.owl?'proud':'happy');
-  toast(`✓ ${c.name}`,()=>{ // undo
+  toast(`✓ ${c.name}${entryDetail(entry)}`,()=>{ // undo
     const t=todayNum();
     for(let i=S.done.length-1;i>=0;i--)if(S.done[i].c===id&&dayNum(S.done[i].t)===t){S.done.splice(i,1);break}
     save();render();
@@ -740,7 +852,7 @@ function maybeBackupNudge(){
 
 /* ================= low energy ================= */
 document.getElementById('lowEnergyBtn').onclick=()=>{
-  const small=['vent','tidy','robot','robot_water','foodwaste','entry','dish_prep'];
+  const small=['vent','tidy','robot_run','robot_water','foodwaste','entry','dish','trash'];
   const cands=visChores().filter(c=>small.includes(c.id)&&!doneToday(c.id))
     .map(c=>[c,choreState(c).r]).sort((a,b)=>b[1]-a[1]);
   if(!cands.length){owlSpeak(`Everything small is already done. Today, resting <b>is</b> the chore. Curl up. 🌙`,'sleepy');return}
@@ -750,16 +862,21 @@ document.getElementById('lowEnergyBtn').onclick=()=>{
 };
 
 /* ================= export ================= */
+function dayEntries(n){ // one entry per chore for a logical day, in the order logged
+  const seen=new Set(),out=[];
+  for(const d of S.done){if(dayNum(d.t)!==n||seen.has(d.c))continue;seen.add(d.c);out.push(d)}
+  return out;
+}
 function buildExport(){
   const t=todayNum();
-  const doneIds=[...new Set(S.done.filter(d=>dayNum(d.t)===t).map(d=>d.c))];
+  const ents=dayEntries(t);
   const cs=allChores();
   let lines=[`🦉 Nest — ${fmtDay(t)}`];
-  if(!doneIds.length){lines.push('— a rest day 🌙');}
+  if(!ents.length){lines.push('— a rest day 🌙');}
   else{
-    for(const id of doneIds){const c=cs.find(x=>x.id===id);lines.push(`✓ ${c?c.name:id}`)}
+    for(const d of ents){const c=cs.find(x=>x.id===d.c);lines.push(`✓ ${c?c.name:d.c}${entryDetail(d)}`)}
     const st=streak();
-    lines.push(`— ${doneIds.length} done${st>1?` · ${st}-day streak 💛`:''}`);
+    lines.push(`— ${ents.length} done${st>1?` · ${st}-day streak 💛`:''}`);
   }
   return lines.join('\n');
 }
@@ -812,13 +929,14 @@ function renderHistory(){
   const cs=allChores(),t=todayNum();
   let html='';
   for(let n=t;n>t-14;n--){
-    const ids=[...new Set(S.done.filter(d=>dayNum(d.t)===n).map(d=>d.c))];
+    const ents=dayEntries(n);
     const label=n===t?'Today':(n===t-1?'Yesterday':fmtDay(n));
-    if(!ids.length){
+    if(!ents.length){
       html+=`<div class="hday rest"><div class="hd">${label}<small>rest day 🌙</small></div></div>`;
     }else{
-      html+=`<div class="hday"><div class="hd">${label}<small>${ids.length} done</small></div><ul>`+
-        ids.map(id=>{const c=cs.find(x=>x.id===id);return `<li><b>✓</b> ${c?c.e+' '+c.name:id}</li>`}).join('')+'</ul></div>';
+      html+=`<div class="hday"><div class="hd">${label}<small>${ents.length} done</small></div><ul>`+
+        ents.map(d=>{const c=cs.find(x=>x.id===d.c);const det=entryDetail(d);
+          return `<li><b>${d.p?'½':'✓'}</b> <span>${c?c.e+' '+esc(c.name):esc(d.c)}${det?`<em class="hnote">${esc(det)}</em>`:''}</span></li>`}).join('')+'</ul></div>';
     }
   }
   const total=S.done.length;
@@ -829,7 +947,7 @@ function renderHistory(){
 /* ================= manage sheet ================= */
 function renderManage(){
   const el=document.getElementById('manageBody');
-  el.innerHTML=allChores().map(c=>{
+  el.innerHTML=allChores().filter(c=>!c.retired).map(c=>{
     const hid=S.hidden.includes(c.id);
     return `<div class="mrow ${hid?'hidden':''}" data-id="${c.id}">
       <span style="font-size:18px">${c.e}</span>
@@ -920,7 +1038,7 @@ document.getElementById('restoreFile').onchange=e=>{
 };
 
 /* ================= sheets & tabs ================= */
-const sheets={history:document.getElementById('historySheet'),manage:document.getElementById('manageSheet')};
+const sheets={history:document.getElementById('historySheet'),manage:document.getElementById('manageSheet'),log:document.getElementById('logSheet')};
 const back=document.getElementById('sheetback');
 let openSheet=null;
 function showSheet(name){
@@ -956,6 +1074,11 @@ setInterval(()=>{if(todayNum()!==seenDay){seenDay=todayNum();render()}},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
 
 render();
+/* one-time hello for the v6 chore list */
+if(!S.firstRun&&!S.seenV6){
+  S.seenV6=1;save();
+  owlSpeak(`New nest rules 🪶 Laundry, Dishes & Robot run are one chore each now. <b>Tap any chore</b> to add tags, a note, or mark it partial.`,'happy');
+}
 </script>
 </body>
 </html>
