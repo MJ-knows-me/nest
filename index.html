@@ -493,11 +493,11 @@ const CHORES=[
  // daily rhythm
  {id:'vent',    name:'Air the house', e:'🌬️', cat:'daily', iv:2, tip:'ten minutes of open windows'},
  {id:'robot_run', name:'Robot run', e:'🤖', cat:'daily', iv:2, tags:['Vacuum','Mop'], from:['robot']},
- {id:'tidy',    name:'10-minute tidy', e:'✨', cat:'daily', iv:1, tip:'things back where they live', ph:'What did you tidy? (e.g. 책상, 거실)'},
- {id:'dish',    name:'Dishes', e:'🍽️', cat:'daily', iv:2, tags:['애벌·넣기','식세기 돌림','꺼내기','손설거지'], from:['dish_prep','dishes']},
+ {id:'tidy',    name:'10-minute tidy', e:'✨', cat:'daily', iv:1, tip:'things back where they live', ph:'What did you tidy? (e.g. desk, living room)'},
+ {id:'dish',    name:'Dishes', e:'🍽️', cat:'daily', iv:2, tags:['Rinse & load','Run dishwasher','Unload','Hand-wash'], from:['dish_prep','dishes']},
  {id:'kitchen', name:'Kitchen reset', e:'🍳', cat:'daily', iv:2, tip:'counters & stovetop'},
  // flexible
- {id:'laundry', name:'Laundry', e:'👕', cat:'often', iv:3, owl:1, tags:['수건','속옷','일반','이불'], from:['laundry_wash','laundry_fold']},
+ {id:'laundry', name:'Laundry', e:'👕', cat:'often', iv:3, owl:1, tags:['Towels','Underwear','Regular','Bedding'], from:['laundry_wash','laundry_fold']},
  {id:'foodwaste',    name:'Food waste run', e:'🥬', cat:'often', iv:3, owl:1},
  {id:'robot_water',  name:'Robot — empty & refill water', e:'💧', cat:'often', iv:3},
  {id:'recycling',    name:'Recycling out', e:'♻️', cat:'often', fixed:[3,0], iv:4, owl:1, from:['recycle']}, // Wed & Sun
@@ -589,7 +589,7 @@ function sinceInfo(c){
   return {ds,eff};
 }
 function esc(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-/* "(partial, 수건, 속옷, note)" — shown in the journal and the Telegram export */
+/* "(partial, Towels, Underwear, note)" — shown in the journal and the Telegram export */
 function entryDetail(d){
   const parts=[];
   if(d.p)parts.push('partial');
